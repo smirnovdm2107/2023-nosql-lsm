@@ -113,9 +113,9 @@ public class TransactionTest extends BaseTest {
                 Entry<String> entry2 = transaction.get(keyAt(1));
 
                 Entry<String> newEntry1 = entry(entry1.key(), entry2.value());
-                Entry<String> newEntry2 = entry(entry2.key(), entry2.value());
+                Entry<String> newEntry2 = entry(entry2.key(), entry1.value());
                 // wait for all to start reading
-                sleep(100);
+                sleep(i * 100);
                 transaction.upsert(newEntry1);
                 transaction.upsert(newEntry2);
                 transaction.commit();
@@ -125,10 +125,12 @@ public class TransactionTest extends BaseTest {
         };
         final int tasks = 20;
         runInParallel(tasks, task).close();
-        // all failed
-        Assertions.assertEquals(tasks, counter.get());
-        Assertions.assertEquals(entryAt(0),dao.get(keyAt(0)) );
-        Assertions.assertEquals(entryAt(1), dao.get(keyAt(1)) );
+        // all but one failed
+        Assertions.assertEquals(tasks - 1, counter.get());
+        Assertions.assertEquals(entry(keyAt(0), valueAt(1)),dao.get(keyAt(0)));
+        Assertions.assertEquals(entry(keyAt(1), valueAt(0)), dao.get(keyAt(1)));
+
+
     }
 
 }
