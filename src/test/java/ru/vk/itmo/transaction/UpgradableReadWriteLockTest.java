@@ -32,7 +32,7 @@ public class UpgradableReadWriteLockTest extends BaseTest {
 
     static class LockProvider implements ArgumentsProvider {
         @Override
-        public Stream<? extends Arguments> provideArguments(final ExtensionContext context) throws Exception {
+        public Stream<? extends Arguments> provideArguments(final ExtensionContext context)  {
             return Stream.of(Arguments.of(new ReentrantUpgradableReadWriteLock()));
         }
     }
@@ -64,7 +64,7 @@ public class UpgradableReadWriteLockTest extends BaseTest {
         }
     }
     @LockTest
-    void testLockAfterLock(UpgradableReadWriteLock lock) throws Exception {
+    void testLockAfterLock(UpgradableReadWriteLock lock) {
         if (lock.tryWriteLock()) {
             lock.writeUnlock();
         } else {
@@ -106,7 +106,7 @@ public class UpgradableReadWriteLockTest extends BaseTest {
         final int taskCount = 10;
 
         final AtomicInteger writers = new AtomicInteger(0);
-        ParallelTask task = (i) -> {
+        ParallelTask task = (_) -> {
             if (lock.tryWriteLock()) {
                 try {
                     writers.incrementAndGet();
@@ -123,7 +123,7 @@ public class UpgradableReadWriteLockTest extends BaseTest {
 
         writers.set(0);
         final AtomicInteger readers = new AtomicInteger(0);
-        task = (i) -> {
+        task = (_) -> {
             if (lock.tryReadLock()) {
                 try {
                     readers.incrementAndGet();
