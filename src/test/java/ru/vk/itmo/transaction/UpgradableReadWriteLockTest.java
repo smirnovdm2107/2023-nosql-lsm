@@ -14,6 +14,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -125,6 +127,7 @@ public class UpgradableReadWriteLockTest extends BaseTest {
             if (lock.tryReadLock()) {
                 try {
                     readers.incrementAndGet();
+                    sleep(100);
                     if (lock.tryWriteLock()) {
                         try {
                             writers.getAndIncrement();
@@ -145,6 +148,31 @@ public class UpgradableReadWriteLockTest extends BaseTest {
         Assertions.assertEquals(taskCount, readers.get());
         Assertions.assertEquals(0, writers.get());
 
+    }
+
+    @LockTest
+    void testReadWhileWrite(final UpgradableReadWriteLock lock) {
+        final AtomicInteger counter = new AtomicInteger(0);
+        final Runnable task = () -> {
+            if (lock.tryReadLock()) {
+                counter.incrementAndGet();
+                if (lock.tryWriteLock()) {
+                    sleep(100);
+                    lock.writeUnlock();
+                }
+                lock.readUnlock();
+            }
+        };
+        final int taskCount = 10;
+        final ExecutorService service = Executors.newFixedThreadPool(taskCount);
+        service.execute(task);
+        sleep(10);
+        for (int i = 0; i < taskCount - 1; i++) {
+            service.execute(task);
+        }
+        service.shutdownNow();
+        service.close();
+        Assertions.assertEquals( 1, counter.get());
     }
 
 }
