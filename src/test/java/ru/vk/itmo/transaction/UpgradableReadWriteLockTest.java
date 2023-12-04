@@ -61,6 +61,43 @@ public class UpgradableReadWriteLockTest extends BaseTest {
             Assertions.fail();
         }
     }
+    @LockTest
+    void testLockAfterLock(UpgradableReadWriteLock lock) throws Exception {
+        if (lock.tryWriteLock()) {
+            lock.writeUnlock();
+        } else {
+            Assertions.fail();
+        }
+
+        if (lock.tryWriteLock()) {
+            lock.writeUnlock();
+        } else {
+            Assertions.fail();
+        }
+        try {
+            lock.writeUnlock();
+            Assertions.fail();
+        } catch (final IllegalMonitorStateException ignored) {
+        }
+        lock = new ReentrantUpgradableReadWriteLock();
+        if (lock.tryReadLock()) {
+            lock.readUnlock();
+        } else {
+            Assertions.fail();
+        }
+
+        if (lock.tryReadLock()) {
+            lock.readUnlock();
+        } else {
+            Assertions.fail();
+        }
+        try {
+            lock.writeUnlock();
+            Assertions.fail();
+        } catch (final IllegalMonitorStateException ignored) {
+        }
+    }
+
 
     @LockTest
     void testConcurrent(final UpgradableReadWriteLock lock) throws Exception {
